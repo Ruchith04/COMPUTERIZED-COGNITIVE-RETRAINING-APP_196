@@ -1,0 +1,1713 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Kids Cognitive Trainer — Portable (AI Coach Edition + Chatbot)</title>
+
+<!-- jsPDF CDN (for client-side PDF export) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- Chart.js for dashboard charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<style>
+  /* ===========================================================
+     THEME — Playful, cartoony, crisp, accessible (kept from original)
+     =========================================================== */
+  :root{
+    --bg1: #fffdf6;
+    --bg2: #f0fbff;
+    --card: #ffffff;
+    --muted: #6b7280;
+    --accent1: #ff8da1;
+    --accent2: #ffd36e;
+    --accent3: #7ad7ff;
+    --accent4: #6ee7b7;
+    --accent5: #a78bfa;
+    --shadow: 0 12px 30px rgba(15,23,42,0.08);
+    --radius: 16px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background:
+      radial-gradient(800px 400px at -10% -10%, rgba(255,238,244,0.6), transparent),
+      radial-gradient(800px 400px at 110% -20%, rgba(231,246,255,0.6), transparent),
+      linear-gradient(180deg,var(--bg1),var(--bg2));
+    color:#0f172a;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 20px; gap:12px;
+    position:sticky; top:0; z-index:10;
+    backdrop-filter:saturate(1.1) blur(8px);
+    background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.6));
+    border-bottom:1px solid rgba(15,23,42,.06);
+  }
+  .brand{display:flex;gap:12px;align-items:center}
+  .logo{
+    width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,var(--accent1),var(--accent3));
+    display:flex;align-items:center;justify-content:center;font-size:32px;color:white;box-shadow:var(--shadow);
+  }
+  h1{font-size:18px;margin:0}
+  .tag{font-size:12px;color:var(--muted)}
+
+  nav{display:flex;gap:8px;flex-wrap:wrap}
+  nav button{
+    border:none;padding:8px 12px;border-radius:999px;background:linear-gradient(90deg,var(--accent1),var(--accent2));
+    color:#fff;cursor:pointer;box-shadow:var(--shadow);font-weight:700;transition:.2s transform ease;
+  }
+  nav button:hover{transform:translateY(-1px)}
+  nav button.secondary{background:#fff;border:1px solid #eef2f7;color:#0f172a}
+
+  main{max-width:1160px;margin:18px auto;padding:12px}
+  .grid{display:grid;gap:14px}
+  .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:stretch}
+  .card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+  .lead{color:var(--muted);margin:8px 0 12px}
+
+  .cta{display:flex;gap:12px;flex-wrap:wrap}
+  .btn{
+    background:linear-gradient(90deg,var(--accent3),#6ea8ff);color:#fff;border:none;padding:10px 16px;border-radius:12px;
+    cursor:pointer;font-weight:800;box-shadow:var(--shadow);transition:transform .15s ease;
+  }
+  .btn:hover{transform:translateY(-1px)}
+  .btn:active{transform:translateY(0)}
+  .btn.alt{background:#fff;color:#0f172a;border:1px solid #e6eef8}
+  .btn.warn{background:linear-gradient(90deg,#fca5a5,#f87171);color:#fff}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}
+  .game-card{display:flex;flex-direction:column;gap:8px}
+  .game-card .mini{font-size:12px;color:var(--muted)}
+
+  .stats{display:flex;gap:12px;flex-wrap:wrap}
+  .stat{flex:1;min-width:160px;padding:12px;border-radius:12px;background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:var(--shadow)}
+  .big{font-size:22px;font-weight:800}
+
+  #exerciseRoot{margin-top:12px}
+  .progress{height:12px;background:#eef2f5;border-radius:999px;overflow:hidden;margin-top:6px}
+  .progress>div{height:100%;width:0;background:linear-gradient(90deg,var(--accent1),var(--accent3));transition:width .4s ease}
+
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:10px;max-width:560px;margin:12px auto}
+  .tile{
+    height:88px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;
+    cursor:pointer;box-shadow:var(--shadow);user-select:none;transition:.15s transform ease, .2s background ease, .2s color ease;
+  }
+  .tile:hover{transform:translateY(-1px)}
+  .tile.flipped{transform:translateY(-4px);background:linear-gradient(90deg,var(--accent1),var(--accent3));color:#fff}
+
+  .circle{
+    width:120px;height:120px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:900;
+    background:#f3f4f6;cursor:pointer;box-shadow:var(--shadow);transition:.12s transform ease, .2s background ease;
+  }
+  .circle.active{background:linear-gradient(90deg,#6ee7b7,#34d399);color:#fff;transform:scale(1.05)}
+
+  .muted{color:var(--muted);font-size:13px}
+  .small{font-size:12px;color:var(--muted)}
+  .center{text-align:center}
+  .right{text-align:right}
+
+  video.webcam{width:100%;max-width:720px;border-radius:12px;box-shadow:var(--shadow);background:#000}
+
+  .stickers{display:flex;gap:8px;flex-wrap:wrap}
+  .sticker{width:64px;height:64px;border-radius:12px;background:linear-gradient(90deg,#fff,#fff7);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:var(--shadow)}
+
+  .kbd{
+    display:inline-block;border:1px solid #e5e7eb;border-bottom-width:3px;padding:.1rem .35rem;border-radius:8px;background:#fff;font-weight:700;
+  }
+
+  /* Modal (for hints/help) */
+  .modal{
+    position:fixed;inset:0;background:rgba(15,23,42,.4);display:none;align-items:center;justify-content:center;padding:18px;z-index:50;
+  }
+  .modal.show{display:flex}
+  .modal .box{max-width:680px;width:100%;background:#fff;border-radius:18px;box-shadow:var(--shadow);padding:18px}
+
+  /* Toast */
+  .toast{
+    position:fixed;right:12px;bottom:12px;background:#111827;color:#fff;padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);
+    font-size:13px;opacity:0;transform:translateY(10px);transition:.2s all ease;z-index:60;
+  }
+  .toast.show{opacity:1;transform:translateY(0)}
+
+  /* Confetti Canvas */
+  #confettiCanvas{position:fixed;inset:0;pointer-events:none;z-index:40}
+
+  /* Accessibility helpers */
+  .sr{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
+
+  /* Selected style for buttons (used in word game) */
+  .selected{outline:3px solid rgba(52,211,153,0.18);transform:translateY(-2px)}
+
+  /* Mobile tweaks */
+  @media (max-width:860px){
+    .hero{grid-template-columns:1fr}
+    nav{flex-wrap:wrap}
+    .logo{width:52px;height:52px;font-size:24px}
+  }
+
+  /* Chatbot UI */
+  .chat-toggle{position:fixed;right:18px;bottom:92px;width:64px;height:64px;border-radius:50%;background:linear-gradient(90deg,var(--accent4),#34d399);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:var(--shadow);cursor:pointer;z-index:70}
+  .chat-window{position:fixed;right:18px;bottom:168px;width:360px;max-height:62vh;border-radius:12px;background:var(--card);box-shadow:0 30px 60px rgba(15,23,42,0.18);display:flex;flex-direction:column;overflow:hidden;z-index:75}
+  .chat-header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #eef2f7}
+  .chat-body{padding:12px;overflow:auto;flex:1;background:linear-gradient(180deg,#fbfbff,#fff)}
+  .msg{margin:8px 0;display:flex;gap:8px}
+  .msg.user{justify-content:flex-end}
+  .bubble{max-width:78%;padding:8px 10px;border-radius:12px;background:#fff;border:1px solid #eef2f7}
+  .bubble.bot{background:linear-gradient(90deg,var(--accent3),#9be7ff);color:#022c4a}
+  .chat-footer{padding:8px;display:flex;gap:8px;border-top:1px solid #eef2f7}
+  .chat-footer input{flex:1;padding:8px;border-radius:8px;border:1px solid #e6eef8}
+  .meta{font-size:11px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo" aria-hidden="true">🧠</div>
+    <div>
+      <h1>Kids Cognitive Trainer</h1>
+      <div class="tag">playful home training — memory, attention, sequencing & more</div>
+    </div>
+  </div>
+
+  <nav aria-label="Main">
+    <button data-screen="home" title="Home">Home</button>
+    <button data-screen="games" title="Games">Games</button>
+    <button data-screen="dashboard" title="Dashboard">Dashboard</button>
+    <button data-screen="settings" class="secondary" title="Settings">Settings</button>
+    <button data-screen="webcam" class="secondary" title="Webcam">Webcam</button>
+    <button id="helpBtn" class="secondary" title="Help">Help</button>
+  </nav>
+</header>
+
+<main id="main">
+  <!-- dynamic content injected here -->
+</main>
+
+<footer style="text-align:center;padding:18px;color:#6b7280">
+  Local-only • Works offline • Use Live Server or <span class="kbd">http://localhost</span> for webcam • Export PDF / JSON from Dashboard
+</footer>
+
+<!-- Confetti layer -->
+<canvas id="confettiCanvas" width="1920" height="1080"></canvas>
+
+<!-- Help modal -->
+<div id="helpModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="box">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <h3 id="helpTitle" style="margin:0">How to use</h3>
+      <button class="btn alt" id="closeHelp">Close</button>
+    </div>
+    <div style="margin-top:10px;display:grid;gap:8px">
+      <p class="muted">
+        Welcome! Choose <b>Games</b> to play quick, fun exercises that train memory, attention, sequencing, inhibition and more.
+        Your device stores progress locally — no sign-in needed. For webcam, open this file via Live Server or <span class="kbd">http://localhost</span>.
+      </p>
+      <ul>
+        <li>Play sessions to earn ⭐ points. Every 50 ⭐ you’ll get a sticker and confetti 🎉</li>
+        <li>Check <b>Dashboard</b> for charts and recent sessions. You can export a PDF, CSV or JSON report.</li>
+        <li>Use <b>Settings</b> to set difficulty, session length, and accessibility preferences.</li>
+        <li>Turn on <b>AI Coach</b> in Dashboard for tailored tips and adaptive difficulty suggestions.</li>
+      </ul>
+      <p class="small muted">Keyboard: <span class="kbd">Space</span>/<span class="kbd">Enter</span> for interact, <span class="kbd">M</span> to mute, <span class="kbd">A</span> to toggle AI Coach, <span class="kbd">C</span> to toggle Chat.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<!-- Chatbot toggle & window -->
+<div id="chatToggle" class="chat-toggle" title="Open Coach">🤖</div>
+<div id="chatWindow" class="chat-window" style="display:none" aria-hidden="true">
+  <div class="chat-header">
+    <div style="display:flex;gap:8px;align-items:center"><div style="font-size:18px">🤖 Coach</div><div class="meta">AI Coach (local)</div></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="exportChat" class="btn alt">Export</button>
+      <button id="clearChat" class="btn alt">Clear</button>
+      <button id="closeChat" class="btn">Close</button>
+    </div>
+  </div>
+  <div id="chatBody" class="chat-body" role="log" aria-live="polite"></div>
+  <div class="chat-footer">
+    <input id="chatInput" placeholder="Ask the Coach (try: 'give me a tip' or 'analyze progress')" />
+    <button id="chatSend" class="btn">Send</button>
+  </div>
+</div>
+
+<script>
+/* ======================================================================
+   Upgraded Kids Cognitive Trainer — AI Coach Edition
+   with local Chatbot added (no external API calls)
+   ====================================================================== */
+
+/* -----------------------
+   Utilities & Local State
+   ----------------------- */
+const $ = (s, root=document) => root.querySelector(s);
+const $$ = (s, root=document) => Array.from((root||document).querySelectorAll(s));
+const nowISO = ()=> new Date().toISOString();
+
+const LS = {
+  get(k, def=null){ try{ const v=localStorage.getItem(k); return v===null?def:JSON.parse(v);}catch(e){return def} },
+  set(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+};
+
+// default persistent state (adds aiCoach & autoAdjust)
+if(LS.get('settings')===null){
+  LS.set('settings', { name:'Child', age:6, difficulty:1, sessionLength:5, sounds:true, highContrast:false, font:'Poppins', autoAdjust:false, aiCoach:true });
+}
+if(LS.get('progress')===null) LS.set('progress', []);
+if(LS.get('points')===null) LS.set('points', 0);
+if(LS.get('stickers')===null) LS.set('stickers', []);
+if(LS.get('streak')===null) LS.set('streak', { lastDay: (new Date()).toDateString(), count: 0 });
+if(LS.get('chat')===null) LS.set('chat', []);
+
+/* --------- Audio & Narration ---------- */
+let audioCtx=null;
+function ensureAudio(){
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+function beep(freq=880, time=0.12, type='sine'){ try{ ensureAudio(); const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type=type; o.frequency.value=freq; g.gain.value=0.06; o.connect(g); g.connect(audioCtx.destination); o.start(); setTimeout(()=>{ o.stop(); g.disconnect(); }, time*1000);}catch(e){}}
+const SND = {
+  ok:()=>beep(880,0.12,'sine'),
+  bad:()=>beep(220,0.18,'sawtooth'),
+  done:()=>beep(1320,0.18,'triangle'),
+  level:()=>beep(1200,0.22,'triangle'),
+  sticker:()=>beep(1480,0.24,'square')
+};
+
+// speech synthesis for "AI coach voice" / narration
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  const s = new SpeechSynthesisUtterance(text);
+  s.rate = 0.95;
+  s.volume = 0.95;
+  window.speechSynthesis.cancel(); // stop previous
+  window.speechSynthesis.speak(s);
+}
+
+/* --------- Helpers: shuffle, icons, rand ---------- */
+function shuffle(a){ const arr = Array.isArray(a)?a.slice():[]; for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]];} return arr; }
+function ico(i){ const icons=["😀","🐶","🍎","🚗","🌟","🎈","🐱","🍓","⚽","🎵","🦄","🍉","🚀","🧩","🧸","🎮"]; return icons[i % icons.length]; }
+function rand(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+
+/* --------- Progress & Points ---------- */
+function pushProgress(entry){
+  const arr = LS.get('progress',[]);
+  arr.unshift(entry);
+  LS.set('progress', arr.slice(0,800));
+}
+function addPoints(n){
+  const p = LS.get('points',0) + n;
+  LS.set('points', p);
+  // improved sticker thresholds and feedback
+  const thresholds = [50, 120, 220, 360]; // progressive thresholds
+  for(const t of thresholds){
+    if(p >= t){
+      LS.set('points', p - t);
+      const sticker = ['🌟','🏆','🎖','✨','🦄','🎯','💎'][Math.floor(Math.random()*7)];
+      const s = LS.get('stickers',[]); s.push(sticker); LS.set('stickers', s);
+      if(LS.get('settings').sounds) SND.level();
+      toast('Level up! You earned a sticker ' + sticker);
+      burstConfetti();
+      break; // only award one at a time
+    }
+  }
+  // ensure points persist if no threshold hit
+  if(LS.get('points') !== p) { /* already adjusted */ } else { LS.set('points', p); }
+}
+function recordDailyStreak(){
+  const st = LS.get('streak', { lastDay:'', count:0 });
+  const today = (new Date()).toDateString();
+  if(st.lastDay !== today){
+    const yesterday = new Date(Date.now() - 24*3600*1000).toDateString();
+    st.count = (st.lastDay === yesterday) ? (st.count + 1) : 1;
+    st.lastDay = today;
+    LS.set('streak', st);
+  }
+}
+
+/* --------- AI Coach (local heuristic "assistant") ----------
+   This is intentionally small, local, deterministic logic to
+   analyze progress and recommend next steps without calling any
+   external AI. It reads performance data in localStorage and
+   outputs human-friendly advice and an auto-difficulty suggestion.
+*/
+function analyzeProgressForAI(){
+  const sessions = LS.get('progress',[]);
+  if(!sessions.length) return { msg:'No sessions yet. Start a short game and I will track progress.', rec: {autoAdjust:false, difficulty: LS.get('settings').difficulty} };
+
+  // compute average accuracy per game type
+  const grouped = {};
+  sessions.slice(0,200).forEach(s=>{
+    const g = s.game || 'Other';
+    if(!grouped[g]) grouped[g] = {sumAcc:0, n:0, rts:[]};
+    const acc = s.max ? (s.score / s.max) : 0;
+    grouped[g].sumAcc += acc; grouped[g].n += 1;
+    if(typeof s.rt === 'number') grouped[g].rts.push(s.rt);
+  });
+
+  // pick weakest area and overall trend
+  let weakest = null, weakestAcc = 1.1;
+  let totalAcc = 0, totalN = 0;
+  Object.keys(grouped).forEach(k=>{
+    const avg = grouped[k].sumAcc / grouped[k].n;
+    if(avg < weakestAcc){ weakestAcc = avg; weakest = k; }
+    totalAcc += grouped[k].sumAcc; totalN += grouped[k].n;
+  });
+  const overall = totalN ? (totalAcc / totalN) : 0;
+
+  // heuristic suggestions
+  const suggestions = [];
+  if(overall < 0.5) suggestions.push('Overall accuracy is a bit low. Try easier difficulty or shorter sessions to build confidence.');
+  else if(overall < 0.75) suggestions.push('Good work — accuracy is improving. Keep sessions short and focused.');
+  else suggestions.push('Excellent accuracy! Consider increasing difficulty slightly to keep the challenge.');
+
+  if(weakest) suggestions.push(`You seem to do relatively worse on "${weakest}". Try playing games focusing on that skill (e.g. practice Memory or Attention).`);
+
+  // RT analysis: if mean rt is high, encourage faster responses
+  let avgRTs = [];
+  Object.values(grouped).forEach(g=>{ if(g.rts.length) avgRTs.push(g.rts.reduce((a,b)=>a+b,0)/g.rts.length); });
+  const avgRT = avgRTs.length ? avgRTs.reduce((a,b)=>a+b,0)/avgRTs.length : null;
+  if(avgRT !== null){
+    if(avgRT > 700) suggestions.push('Average reaction time is a bit slow — try Reaction or Attention tap games to practice speed.');
+    else suggestions.push('Reaction times are good — keep it up!');
+  }
+
+  // Suggest difficulty auto-adjust
+  const settings = LS.get('settings');
+  let suggestedDifficulty = settings.difficulty;
+  if(settings.autoAdjust){
+    // simple rule: if overall accuracy > .85 raise, if < .45 lower
+    if(overall > 0.85 && settings.difficulty < 5) suggestedDifficulty = settings.difficulty + 1;
+    if(overall < 0.45 && settings.difficulty > 1) suggestedDifficulty = settings.difficulty - 1;
+  }
+
+  const msg = suggestions.join(' ');
+  return { msg, rec: { autoAdjust: settings.autoAdjust, difficulty: suggestedDifficulty, overall: Math.round(overall*100) } };
+}
+
+/* --------- UI Router & Toast ---------- */
+function render(screen){
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+  switch(screen){
+    case 'home': renderHome(main); break;
+    case 'games': renderGames(main); break;
+    case 'dashboard': renderDashboard(main); break;
+    case 'settings': renderSettings(main); break;
+    case 'webcam': renderWebcam(main); break;
+    default: renderHome(main);
+  }
+}
+document.querySelectorAll('nav button[data-screen]').forEach(b=> b.addEventListener('click', ()=> render(b.dataset.screen)));
+
+const toastEl = $('#toast');
+let toastTimer = null;
+function toast(msg, ms=2200){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> toastEl.classList.remove('show'), ms);
+}
+
+/* --------- Confetti (kept, small refactor) ---------- */
+const confettiCanvas = $('#confettiCanvas');
+const ctxConf = confettiCanvas.getContext && confettiCanvas.getContext('2d');
+let confettiPieces = [];
+function makeConfettiPiece(){
+  const w = confettiCanvas.width || window.innerWidth, h = confettiCanvas.height || window.innerHeight;
+  return {
+    x: Math.random()*w,
+    y: -10,
+    r: rand(3,6),
+    s: Math.random()*2 + 1,
+    a: Math.random()*Math.PI*2,
+    av: (Math.random()-.5)*0.2,
+    c: ['#ff8da1','#ffd36e','#7ad7ff','#6ee7b7','#a78bfa'][rand(0,4)]
+  };
+}
+function burstConfetti(n=140){
+  try{
+    const { innerWidth:w, innerHeight:h } = window;
+    confettiCanvas.width = w; confettiCanvas.height = h;
+    for(let i=0;i<n;i++) confettiPieces.push(makeConfettiPiece());
+    if(!confettiAnimating) { confettiAnimating = true; requestAnimationFrame(stepConfetti); }
+  }catch(e){}
+}
+let confettiAnimating = false;
+function stepConfetti(){
+  if(!ctxConf) return;
+  const w=confettiCanvas.width, h=confettiCanvas.height;
+  ctxConf.clearRect(0,0,w,h);
+  confettiPieces.forEach(p=>{
+    p.y += p.s;
+    p.x += Math.sin(p.a)*0.8;
+    p.a += p.av;
+    ctxConf.fillStyle = p.c;
+    ctxConf.beginPath(); ctxConf.arc(p.x,p.y,p.r,0,Math.PI*2); ctxConf.fill();
+  });
+  confettiPieces = confettiPieces.filter(p=> p.y < h+12);
+  if(confettiPieces.length>0){ requestAnimationFrame(stepConfetti); }
+  else { confettiAnimating = false; }
+}
+
+/* --------- Help modal ---------- */
+$('#helpBtn').addEventListener('click', ()=> { $('#helpModal').classList.add('show'); if(LS.get('settings').aiCoach) speak('Hello! Press C to open the Coach.'); });
+$('#closeHelp').addEventListener('click', ()=> $('#helpModal').classList.remove('show'));
+$('#helpModal').addEventListener('click', (e)=>{ if(e.target.id==='helpModal') e.currentTarget.classList.remove('show'); });
+
+/* ======================================================================
+   Screens: Home / Games / Dashboard / Settings / Webcam
+   ====================================================================== */
+function renderHome(root){
+  const settings = LS.get('settings');
+  const el = document.createElement('div');
+  el.innerHTML = `
+    <div class="hero">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <div style="font-size:28px">👋</div>
+              <div>
+                <div style="font-weight:800;font-size:20px">Welcome, <span id="heroName">${settings.name}</span>!</div>
+                <div class="muted">Let's play — short sessions, lots of fun</div>
+              </div>
+            </div>
+          </div>
+          <div class="right">
+            <div class="small muted">Points</div>
+            <div style="font-weight:800;font-size:20px">${LS.get('points',0)} ⭐</div>
+          </div>
+        </div>
+        <p class="lead">Choose a quick game to train memory, attention, sequencing, inhibition, math and more. Earn stickers and points!</p>
+        <div class="cta">
+          <button class="btn" id="startPlay">Play Now</button>
+          <button class="btn alt" id="toDashboard">View Dashboard</button>
+          <button class="btn alt" id="readTip">Random Tip</button>
+        </div>
+        <div style="margin-top:12px" class="muted">Tip: For webcam features use Live Server or <span class="kbd">http://localhost</span></div>
+      </div>
+
+      <div class="card">
+        <h3>Daily Goals & AI Coach</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px">
+          <div class="stat"><div class="small">Session length (min)</div><div class="big">${settings.sessionLength}</div></div>
+          <div class="stat"><div class="small">Stickers</div><div class="big">${LS.get('stickers',[]).length}</div></div>
+          <div class="stat"><div class="small">Points</div><div class="big">${LS.get('points',0)}</div></div>
+          <div class="stat"><div class="small">Streak</div><div class="big">${LS.get('streak',{count:0}).count} 🔥</div></div>
+        </div>
+
+        <div style="margin-top:12px">
+          <div class="progress"><div id="homeProgress" style="width:0%"></div></div>
+          <div class="small muted" id="homeProgText">Progress to next sticker</div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <label class="small muted">AI Coach <input type="checkbox" id="aiToggle" ${settings.aiCoach? 'checked':''}></label>
+          <button class="btn alt" id="openCoach">Quick coach</button>
+        </div>
+      </div>
+    </div>
+
+    <section style="margin-top:18px">
+      <h3>Popular games</h3>
+      <div class="cards" id="popularGames"></div>
+    </section>
+  `;
+  root.appendChild(el);
+  $('#startPlay', el).onclick = ()=> render('games');
+  $('#toDashboard', el).onclick = ()=> render('dashboard');
+  $('#readTip', el).onclick = ()=> {
+    const tips = [
+      'Short, frequent sessions beat long, rare ones.',
+      'Celebrate effort, not just scores.',
+      'Try different games to train multiple skills.',
+      'Turn on sounds for quick feedback.',
+      'Increase difficulty slowly for confidence.'
+    ];
+    toast(tips[rand(0, tips.length-1)]);
+  };
+
+  // progress to next sticker
+  const p = LS.get('points',0);
+  const pct = Math.min(100, Math.round((p/50)*100));
+  $('#homeProgress', el).style.width = pct+'%';
+  $('#homeProgText', el).textContent = `Next sticker at 50 ⭐ — ${Math.max(0,50 - p)} to go`;
+
+  recordDailyStreak();
+
+  // populate popular
+  const popular = ['memory','attention','sequence','stroop','math','reaction','pattern','word','trail'];
+  const grid = $('#popularGames', el);
+  popular.forEach(id=>{
+    const g = GAMES.find(x=>x.id===id);
+    if(!g) return;
+    const card = document.createElement('div'); card.className='card game-card';
+    card.innerHTML = `
+      <div style="font-size:22px">${g.icon} <strong>${g.title}</strong></div>
+      <div class="muted">${g.desc}</div>
+      <div class="mini">Focus: ${g.focus}</div>
+      <div style="margin-top:10px"><button class="btn" data-id="${g.id}">Start</button></div>`;
+    card.querySelector('button').onclick = ()=> startGame(g.id);
+    grid.appendChild(card);
+  });
+
+  $('#aiToggle', el).addEventListener('change', (e)=>{
+    const s = LS.get('settings'); s.aiCoach = !!e.target.checked; LS.set('settings', s);
+    toast(`AI Coach ${s.aiCoach ? 'enabled' : 'disabled'}`);
+  });
+  $('#openCoach', el).onclick = ()=> {
+    const res = analyzeProgressForAI();
+    // show quick modal toast plus speak
+    toast('Coach: ' + res.msg, 4000);
+    if(LS.get('settings').aiCoach) speak(res.msg);
+  };
+}
+
+function renderGames(root){
+  const el = document.createElement('div');
+  el.innerHTML = `<h2>Games library</h2><p class="muted">Tap any game to start. Earn points & stickers.</p><div class="cards" id="gamesGrid"></div>`;
+  root.appendChild(el);
+  const grid = $('#gamesGrid', el);
+  GAMES.forEach(g=>{
+    const card = document.createElement('div'); card.className='card game-card';
+    card.innerHTML = `
+      <div style="font-size:20px">${g.icon} <strong>${g.title}</strong></div>
+      <div class="muted">${g.desc}</div>
+      <div class="mini">Focus: ${g.focus}</div>
+      <div style="margin-top:10px"><button class="btn" data-id="${g.id}">Play</button></div>`;
+    card.querySelector('button').onclick = ()=> startGame(g.id);
+    grid.appendChild(card);
+  });
+}
+
+function renderDashboard(root){
+  const el = document.createElement('div');
+  el.innerHTML = `<h2>Dashboard</h2><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div style="flex:1" id="statsWrap"></div>
+    <div style="width:320px" class="card">
+      <h3 style="margin-top:0">AI Coach</h3>
+      <div id="aiPanel" class="muted small"></div>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button class="btn" id="aiAnalyze">Analyze now</button>
+        <button class="btn alt" id="aiApply">Apply suggestion</button>
+      </div>
+      <hr style="margin:8px 0"/>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn alt" id="exportPdf">Export PDF</button>
+        <button class="btn alt" id="exportCsv">Export CSV</button>
+        <button class="btn alt" id="exportJson">Export JSON</button>
+        <button class="btn alt" id="importJson">Import JSON</button>
+      </div>
+    </div>
+  </div>
+    <div class="card" style="margin-top:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3>Recent sessions</h3>
+      </div>
+      <div id="recent" style="margin-top:10px;max-height:240px;overflow:auto"></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h3>Performance Charts</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <canvas id="chartAcc" height="160"></canvas>
+        <canvas id="chartRT" height="160"></canvas>
+      </div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h3>Sticker album</h3>
+      <div class="stickers" id="stickersWrap"></div>
+    </div>
+  `;
+  root.appendChild(el);
+
+  const sessions = LS.get('progress',[]);
+  const statsWrap = $('#statsWrap', el);
+  const accs = sessions.map(s=> s.max? (s.score/s.max):0 );
+  const avgAcc = accs.length? Math.round(accs.reduce((a,b)=>a+b,0)/accs.length*100):0;
+  statsWrap.innerHTML = `
+    <div class="stat"><div class="small">Total sessions</div><div class="big">${sessions.length}</div></div>
+    <div class="stat"><div class="small">Avg accuracy</div><div class="big">${avgAcc}%</div></div>
+    <div class="stat"><div class="small">Avg reaction</div><div class="big">${computeAvgRT(sessions)}</div></div>
+    <div class="stat"><div class="small">Points</div><div class="big">${LS.get('points',0)}</div></div>
+  `;
+
+  const recent = $('#recent', el);
+  if(sessions.length===0) recent.innerHTML = '<div class="muted">No sessions yet — play a game!</div>';
+  else{
+    sessions.slice(0,200).forEach(s=>{
+      const r = document.createElement('div'); r.className='row'; r.style.marginBottom='8px'; r.style.display='flex'; r.style.justifyContent='space-between'; r.style.alignItems='center';
+      r.innerHTML = `
+        <div><strong>${s.game}</strong>
+          <div class="small muted">${new Date(s.at).toLocaleString()}</div>
+        </div>
+        <div class="right">
+          <strong>${s.score}/${s.max}</strong>
+          <div class="small muted">${s.rt? Math.round(s.rt)+'ms' : '-'}</div>
+        </div>`;
+      recent.appendChild(r);
+    });
+  }
+
+  // stickers
+  const sw = $('#stickersWrap', el);
+  const stickers = LS.get('stickers',[]);
+  if(stickers.length===0) sw.innerHTML = '<div class="muted">No stickers yet — earn some!</div>';
+  else stickers.forEach(stk=>{ const d=document.createElement('div'); d.className='sticker'; d.textContent = stk; sw.appendChild(d); });
+
+  $('#exportPdf').onclick = exportPDF;
+  $('#exportCsv').onclick = exportCSV;
+  $('#exportJson').onclick = exportJSON;
+  $('#importJson').onclick = importJSON;
+
+  // AI panel
+  const aiPanel = $('#aiPanel', el);
+  function showAI(){
+    const res = analyzeProgressForAI();
+    aiPanel.textContent = res.msg + ` (suggested difficulty: ${res.rec.difficulty}, autoAdjust:${res.rec.autoAdjust})`;
+  }
+  $('#aiAnalyze').onclick = ()=> { showAI(); if(LS.get('settings').aiCoach) speak('Analysis complete. Check dashboard.'); };
+  $('#aiApply').onclick = ()=>{
+    const res = analyzeProgressForAI();
+    const s = LS.get('settings'); s.difficulty = res.rec.difficulty; LS.set('settings', s);
+    toast('Applied suggested difficulty: ' + res.rec.difficulty);
+    if(LS.get('settings').aiCoach) speak('Applied suggested difficulty.');
+  };
+  showAI();
+
+  drawCharts();
+}
+
+function renderSettings(root){
+  const settings = LS.get('settings');
+  const el = document.createElement('div');
+  el.innerHTML = `
+    <h2>Settings</h2>
+    <div class="card" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div>
+        <h3>Profile</h3>
+        <label>Name<br/><input id="s_name" value="${settings.name}" style="padding:8px;width:100%"/></label><br/><br/>
+        <label>Age<br/><input id="s_age" type="number" value="${settings.age}" style="padding:8px;width:120px"/></label><br/><br/>
+        <label>Font<br/>
+          <select id="s_font" style="padding:8px;width:220px">
+            <option ${settings.font==='Poppins'?'selected':''}>Poppins</option>
+            <option ${settings.font==='Arial'?'selected':''}>Arial</option>
+            <option ${settings.font==='Comic Sans MS'?'selected':''}>Comic Sans MS</option>
+            <option ${settings.font==='System UI'?'selected':''}>System UI</option>
+          </select>
+        </label>
+      </div>
+      <div>
+        <h3>Session</h3>
+        <label>Difficulty <span class="small muted">(${settings.difficulty})</span><br/>
+          <input id="s_difficulty" type="range" min="1" max="5" value="${settings.difficulty}" style="width:100%"/>
+        </label><br/><br/>
+        <label>Session length (min)<br/>
+          <select id="s_sesslen"><option value="3">3</option><option value="5">5</option><option value="10">10</option><option value="15">15</option></select>
+        </label><br/><br/>
+        <label><input type="checkbox" id="s_sounds" ${settings.sounds? 'checked':''}/> Sounds</label><br/>
+        <label><input type="checkbox" id="s_contrast" ${settings.highContrast? 'checked':''}/> High contrast</label><br/>
+        <label><input type="checkbox" id="s_auto" ${settings.autoAdjust? 'checked':''}/> Auto-adjust difficulty (AI Coach)</label>
+      </div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" id="saveSettings">Save settings</button>
+      <button class="btn alt" id="clearProgress">Clear progress</button>
+      <button class="btn warn" id="factoryReset">Factory reset</button>
+    </div>
+  `;
+  root.appendChild(el);
+  $('#s_sesslen', el).value = settings.sessionLength;
+
+  $('#saveSettings', el).onclick = ()=> {
+    const s = {
+      name: $('#s_name', el).value || 'Child',
+      age: parseInt($('#s_age', el).value||6,10),
+      difficulty: parseInt($('#s_difficulty', el).value,10),
+      sessionLength: parseInt($('#s_sesslen', el).value,10),
+      sounds: !!$('#s_sounds', el).checked,
+      highContrast: !!$('#s_contrast', el).checked,
+      font: $('#s_font', el).value,
+      autoAdjust: !!$('#s_auto', el).checked,
+      aiCoach: LS.get('settings').aiCoach // keep previous ai toggle
+    };
+    LS.set('settings', s);
+    if(s.sounds) try{ ensureAudio(); }catch(e){}
+    applyPreferences();
+    toast('Settings saved');
+  };
+
+  $('#clearProgress', el).onclick = ()=> {
+    if(confirm('Clear progress and stickers?')){ LS.set('progress',[]); LS.set('stickers',[]); LS.set('points',0); toast('Cleared'); }
+  };
+  $('#factoryReset', el).onclick = ()=> {
+    if(confirm('This will reset everything (settings, points, progress). Continue?')){
+      localStorage.clear();
+      toast('Reset complete. Reloading…');
+      setTimeout(()=> location.reload(), 800);
+    }
+  };
+}
+
+function renderWebcam(root){
+  const el = document.createElement('div');
+  el.innerHTML = `
+    <h2>Webcam</h2>
+    <div class="card center">
+      <p class="muted">Webcam requires a secure origin. Use Live Server or http://localhost. If you get a permission prompt, allow camera access.</p>
+      <video id="webcam" class="webcam" autoplay playsinline muted></video>
+      <div id="camMsg" class="small muted" style="margin-top:8px"></div>
+    </div>`;
+  root.appendChild(el);
+
+  const v = $('#webcam', el);
+  const msg = $('#camMsg', el);
+  if(!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)){
+    msg.textContent = 'Camera not supported by this browser.';
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({ video: { width: 640 }, audio: false })
+    .then(stream=>{ v.srcObject = stream; v.onloadedmetadata = ()=> v.play(); msg.textContent = 'Camera active. The stream stays on your device.'; })
+    .catch(err=>{ console.warn('Webcam error', err); msg.textContent = 'Camera error: ' + (err.name || err.message || err); });
+}
+
+/* ======================================================================
+   Export (PDF / CSV / JSON)
+   ====================================================================== */
+function exportPDF(){
+  try{
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p','pt','a4');
+    doc.setFontSize(18); doc.text('Cognitive Trainer — Session Report', 40, 60);
+    doc.setFontSize(10); doc.text('Generated: ' + new Date().toLocaleString(), 40, 80);
+    const items = LS.get('progress',[]);
+    let y = 110;
+    doc.setFontSize(10);
+    items.slice(0,200).forEach((it, i)=>{
+      const line = `${i+1}. ${it.game} — ${it.score}/${it.max} — ${it.rt? Math.round(it.rt)+'ms':''} — ${new Date(it.at).toLocaleString()}`;
+      doc.text(line, 40, y); y += 14;
+      if(y > 740){ doc.addPage(); y = 40; }
+    });
+    doc.save('trainer-report.pdf');
+  } catch(e){
+    // fallback to print
+    window.print();
+  }
+}
+function exportCSV(){
+  const items = LS.get('progress',[]);
+  const header = 'game,score,max,rt_ms,timestamp\n';
+  const rows = items.map(it=>[
+    JSON.stringify(it.game), it.score, it.max, Math.round(it.rt||0), JSON.stringify(it.at)
+  ].join(',')).join('\n');
+  const blob = new Blob([header+rows], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='trainer-sessions.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+function exportJSON(){
+  const out = {
+    settings: LS.get('settings'),
+    progress: LS.get('progress'),
+    points: LS.get('points'),
+    stickers: LS.get('stickers')
+  };
+  const blob = new Blob([JSON.stringify(out, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='trainer-export.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+function importJSON(){
+  const inp = document.createElement('input'); inp.type='file'; inp.accept='application/json';
+  inp.onchange = (e)=>{
+    const f = e.target.files[0];
+    if(!f) return;
+    const r = new FileReader();
+    r.onload = ()=> {
+      try{
+        const obj = JSON.parse(r.result);
+        if(obj.settings) LS.set('settings', obj.settings);
+        if(obj.progress) LS.set('progress', obj.progress);
+        if(obj.points !== undefined) LS.set('points', obj.points);
+        if(obj.stickers) LS.set('stickers', obj.stickers);
+        toast('Import successful. Reloading view.');
+        setTimeout(()=> render('dashboard'), 600);
+      }catch(err){ alert('Failed to import: ' + err.message); }
+    };
+    r.readAsText(f);
+  };
+  inp.click();
+}
+
+/* ======================================================================
+   Games registry & startGame wrapper (kept original games + improved API)
+   Each game calls api.done(score, max, rt, sticker, points)
+   ====================================================================== */
+
+/* Games registry */
+const GAMES = [
+  { id:'memory', title:'Memory Pairs', icon:'🃏', desc:'Flip tiles and match pairs', run: MemoryGame, focus:'Visual memory' },
+  { id:'attention', title:'Attention Tap', icon:'🎯', desc:'Tap when the circle appears', run: AttentionGame, focus:'Sustained attention' },
+  { id:'sequence', title:'Sequencing', icon:'🔢', desc:'Watch and repeat sequences', run: SequenceGame, focus:'Working memory' },
+  { id:'stroop', title:'🌈', desc:'Pick the color matching the word', run: StroopGame, focus:'Inhibitory control' },
+  { id:'math', title:'Math Quick', icon:'➕', desc:'Solve quick arithmetic', run: MathQuick, focus:'Mental arithmetic' },
+  { id:'reaction', title:'Reaction', icon:'⚡', desc:'Tap when the light turns green', run: ReactionGame, focus:'Processing speed' },
+  { id:'shapes', title:'🔷', desc:'Match shapes', run: ShapesGame, focus:'Visual discrimination' },
+  { id:'mole', title:'🐹', desc:'Whack the mole', run: MoleGame, focus:'Selective attention' },
+  { id:'nback', title:'1-Back', icon:'1️⃣', desc:'Press when current equals previous', run: NBackGame, focus:'Working memory' },
+  { id:'odd', title:'Odd One Out', icon:'🧐', desc:'Find the different emoji', run: OddOneGame, focus:'Perceptual reasoning' },
+
+  /* Extra games added for depth/length */
+  { id:'pattern', title:'Pattern Tiles', icon:'🧩', desc:'Memorize the pattern, then recreate it', run: PatternTilesGame, focus:'Spatial working memory' },
+  { id:'word', title:'Word Memory', icon:'📝', desc:'Remember words and pick them out', run: WordMemoryGame, focus:'Verbal memory' },
+  { id:'trail', title:'Trail Tapping', icon:'🗺', desc:'Tap numbers in order as fast as you can', run: TrailTappingGame, focus:'Visual scanning' },
+  { id:'sort', title:'Quick Sort', icon:'🧺', desc:'Drag emojis into matching baskets', run: QuickSortGame, focus:'Categorization' }
+];
+
+/* Start a game, show exercise UI wrapper.
+   The api has:
+   - done(score, max, rt, sticker, points): record results and optionally award items
+   - progress(pct): update progress bar
+   - sounds(): boolean check for sounds
+*/
+function startGame(id){
+  const g = GAMES.find(x=>x.id===id);
+  if(!g) return alert('Game not found');
+  const main = document.getElementById('main'); main.innerHTML = '';
+  const settings = LS.get('settings');
+
+  const container = document.createElement('div');
+  container.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn alt" id="backBtn">← Back</button>
+        <button class="btn alt" id="hintBtn">Hint</button>
+        <button class="btn alt" id="pauseBtn">Pause</button>
+      </div>
+      <div class="small muted">Difficulty: ${settings.difficulty} • Session length: ${settings.sessionLength} min</div>
+    </div>
+    <div class="progress card"><div style="height:12px"><div id="progressBar" style="height:12px;width:0%"></div></div></div>
+    <div id="exerciseRoot" class="card" style="margin-top:12px"></div>
+  `;
+  main.appendChild(container);
+  $('#backBtn', container).onclick = ()=> render('games');
+  $('#hintBtn', container).onclick = ()=> toast('Hints: Focus on speed and accuracy. Try to breathe and do your best.');
+  $('#pauseBtn', container).onclick = ()=> {
+    // pause: send a "paused" property to games via window flag
+    window.__gamePaused = !window.__gamePaused;
+    $('#pauseBtn').textContent = window.__gamePaused ? 'Resume' : 'Pause';
+    toast(window.__gamePaused ? 'Paused' : 'Resumed');
+  };
+
+  const api = {
+    done: (score, max, rt, sticker, points) => {
+      // improved result handling: record, award points, auto-adjust difficulty if enabled
+      const entry = { game: g.title, score, max, rt, at: nowISO() };
+      pushProgress(entry);
+      if(points) addPoints(points);
+      if(sticker) { const s = LS.get('stickers',[]); s.push(sticker); LS.set('stickers', s); burstConfetti(90); }
+      if(LS.get('settings').sounds) SND.done();
+
+      // auto-adjust difficulty if enabled
+      const settings = LS.get('settings');
+      if(settings.autoAdjust){
+        const acc = (max? score/max : 0);
+        // simple rules: if acc > 0.85 => up one; if acc < 0.45 => down one
+        if(acc > 0.85 && settings.difficulty < 5){ settings.difficulty++; LS.set('settings', settings); }
+        else if(acc < 0.45 && settings.difficulty > 1){ settings.difficulty--; LS.set('settings', settings); }
+      }
+
+      // show result summary UI & narration if enabled
+      const msg = `${g.title} finished — Score ${score}/${max}` + (rt? ` — ${Math.round(rt)} ms` : '');
+      if(LS.get('settings').aiCoach) speak(msg);
+      toast(msg, 2400);
+      // short delay then go to dashboard
+      setTimeout(()=> render('dashboard'), 700);
+    },
+    progress: pct => { $('#progressBar').style.width = Math.max(0, Math.min(100, pct)) + '%'; },
+    sounds: () => !!LS.get('settings').sounds
+  };
+
+  try{
+    g.run($('#exerciseRoot', container), api, settings);
+  } catch(err){
+    console.error(err);
+    $('#exerciseRoot', container).innerHTML = '<div class="muted">Game failed to start.</div>';
+  }
+}
+
+/* ======================================================================
+   (Games implementations)
+   Most games are adapted from original source; I added minor improvements:
+   - keyboard handlers (space/enter)
+   - better progress reporting
+   - improved scoring & RT measurements
+   ====================================================================== */
+
+/* -------------------- 1) MEMORY -------------------- */
+function MemoryGame(root, api, settings){
+  const diff = settings.difficulty || 1;
+  const map = {1:3,2:4,3:6,4:8,5:10};
+  const pairs = map[diff] || 3;
+  const deck = shuffle(Array.from({length:pairs}).flatMap((_,i)=>[i,i]));
+  let flipped=[], matched=[], moves=0, firstTs=0, totalRT=0, pairsMade=0;
+
+  root.innerHTML = `
+    <h3>Memory Pairs</h3>
+    <p class="muted">Flip and match pairs. Moves: <span id="moves">0</span></p>
+    <div class="tiles" id="grid"></div>
+  `;
+  const grid = $('#grid', root);
+
+  deck.forEach((val, idx)=>{
+    const t = document.createElement('div'); t.className='tile'; t.textContent='?'; t.setAttribute('aria-label','card');
+    t.tabIndex = 0;
+    t.onclick = ()=> flip(idx, t);
+    t.onkeydown = (e)=> { if(e.key==='Enter' || e.key===' ') { e.preventDefault(); flip(idx, t); } };
+    grid.appendChild(t);
+  });
+
+  api.progress(0);
+  function flip(i, el){
+    if(window.__gamePaused) return;
+    if(flipped.includes(i) || matched.includes(i) || flipped.length===2) return;
+    if(flipped.length===0) firstTs = performance.now();
+    flipped.push(i); el.classList.add('flipped'); el.textContent = ico(deck[i]);
+
+    if(flipped.length===2){
+      moves++; $('#moves', root).textContent = moves;
+      const [a,b] = flipped;
+      if(deck[a] === deck[b]){
+        matched.push(a,b);
+        if(api.sounds()) SND.ok();
+        pairsMade++;
+        totalRT += (performance.now() - firstTs);
+        flipped = [];
+      } else {
+        if(api.sounds()) SND.bad();
+        setTimeout(()=>{
+          const tiles=$$('.tile', grid);
+          [a,b].forEach(ii=>{
+            tiles[ii].classList.remove('flipped');
+            tiles[ii].textContent='?';
+          });
+          flipped = [];
+        }, 700);
+      }
+      api.progress(Math.round(matched.length/deck.length*100));
+      if(matched.length === deck.length){
+        const avgRT = pairsMade ? (totalRT/pairsMade) : null;
+        api.done(pairs, pairs, avgRT, '🌟', 5*pairs);
+      }
+    }
+  }
+}
+
+/* -------------------- 2) ATTENTION TAP -------------------- */
+function AttentionGame(root, api, settings){
+  const diff = settings.difficulty||1;
+  const base = 1200; const interval = Math.max(300, base - diff*150);
+  const sessionMin = settings.sessionLength || 5;
+  const total = Math.max(10, Math.floor((sessionMin*60*1000)/interval/6));
+  let score=0, rounds=0, visible=false, startTime=0, rts=[];
+
+  root.innerHTML = `
+    <h3>Attention Tap</h3>
+    <p class="muted">Tap the circle when it turns green. Score: <b id="sc">0</b></p>
+    <div class="center"><button class="circle" id="tapBtn" aria-label="attention-button">Wait</button></div>
+  `;
+  const btn = $('#tapBtn', root);
+  btn.onclick = ()=> handleTap();
+  // keyboard
+  document.addEventListener('keydown', handleKeyPress);
+
+  function handleKeyPress(e){
+    if(e.key===' ' || e.key==='Enter') { e.preventDefault(); handleTap(); }
+  }
+  function handleTap(){
+    if(window.__gamePaused) return;
+    if(visible){
+      const rt = performance.now() - startTime;
+      rts.push(rt);
+      score++;
+      if(api.sounds()) SND.ok();
+      visible=false; btn.classList.remove('active'); btn.textContent='Wait';
+      api.progress(Math.round(rounds/total*100));
+      $('#sc', root).textContent = score;
+    } else {
+      score = Math.max(0, score-1);
+      if(api.sounds()) SND.bad();
+      $('#sc', root).textContent = score;
+    }
+  }
+  function step(){
+    if(window.__gamePaused){ setTimeout(step, 300); return; }
+    visible = !visible; rounds++;
+    if(visible){ btn.classList.add('active'); btn.textContent='Tap!'; startTime = performance.now(); }
+    else { btn.classList.remove('active'); btn.textContent='Wait'; }
+    api.progress(Math.round(rounds/total*100));
+    if(rounds >= total){
+      document.removeEventListener('keydown', handleKeyPress);
+      const avg = rts.length? rts.reduce((a,b)=>a+b,0)/rts.length : null;
+      api.done(score, total, avg, '🎯', score*2); return;
+    }
+    setTimeout(step, interval);
+  }
+  setTimeout(step, 600);
+}
+
+/* -------------------- 3) SEQUENCE -------------------- */
+function SequenceGame(root, api, settings){
+  const diff = settings.difficulty||1;
+  const length = Math.min(9, 3 + diff);
+  const seq = Array.from({length}, ()=> rand(0,7));
+  let idx=0, phase='show', user=[];
+  root.innerHTML = `
+    <h3>Sequencing</h3>
+    <p class="muted" id="seqInfo">Watch the sequence (0/${length})</p>
+    <div class="center"><div class="tile" id="showTile" style="width:120px;height:120px;font-size:40px"></div></div>
+    <div class="tiles" id="seqPad" style="max-width:420px;margin-top:12px"></div>
+  `;
+  const showTile = $('#showTile', root), pad = $('#seqPad', root);
+  Array.from({length:8}).forEach((_,i)=>{
+    const b=document.createElement('div'); b.className='tile'; b.textContent = i+1; b.style.height='72px';
+    b.onclick = ()=> press(i); b.tabIndex = 0; b.onkeydown = (e)=> { if(e.key==='Enter' || e.key===' ') press(i); };
+    pad.appendChild(b); b.disabled = true;
+  });
+
+  function showStep(){
+    if(idx < seq.length){
+      showTile.textContent = ico(seq[idx]);
+      $('#seqInfo', root).textContent = `Watch the sequence (${idx+1}/${length})`;
+      idx++;
+      api.progress(Math.round(idx/length*70));
+      setTimeout(showStep, 700);
+    } else {
+      phase='input'; showTile.textContent='Your turn'; $('#seqInfo', root).textContent = `Repeat the sequence (0/${length})`;
+      $$('.tile', pad).forEach(b=> b.disabled = false);
+      api.progress(75);
+    }
+  }
+  setTimeout(showStep, 400);
+
+  function press(n){
+    if(window.__gamePaused) return;
+    if(phase!=='input') return;
+    user.push(n);
+    $('#seqInfo', root).textContent = `Repeat the sequence (${user.length}/${length})`;
+    api.progress(75 + Math.round(user.length/length*25));
+    if(user.length===length){
+      let correct=0; for(let i=0;i<length;i++) if(seq[i]===user[i]) correct++;
+      api.done(correct, length, null, correct===length?'🔢':null, correct*3);
+    }
+  }
+}
+
+/* -------------------- 4) STROOP -------------------- */
+function StroopGame(root, api, settings){
+  const colors = ['red','blue','green','orange','purple','brown'];
+  const names = {red:'Red',blue:'Blue',green:'Green',orange:'Orange',purple:'Purple',brown:'Brown'};
+  let rounds=8, score=0;
+  root.innerHTML = `
+    <h3>Stroop</h3>
+    <div class="center"><div id="stroopWord" class="tile" style="width:220px;height:96px;font-size:28px"></div></div>
+    <div style="margin-top:12px" id="stroopOpts" class="cards"></div>
+  `;
+  const word = $('#stroopWord', root), opts = $('#stroopOpts', root);
+  function next(){
+    if(rounds<=0){ api.done(score, 8, null, '🌈', score*4); return; }
+    rounds--;
+    const w = colors[rand(0, colors.length-1)];
+    const ink = colors[rand(0, colors.length-1)];
+    word.textContent = names[w]; word.style.color = ink;
+    opts.innerHTML = '';
+    let choices = shuffle(colors).slice(0,4);
+    if(!choices.includes(w)) choices[0] = w;
+    shuffle(choices).forEach(c=>{
+      const card = document.createElement('div'); card.className='card'; card.style.textAlign='center';
+      card.innerHTML = `<button class="btn alt" aria-label="${names[c]}">${names[c]}</button>`;
+      card.querySelector('button').onclick = ()=> { if(c===w){ score++; if(api.sounds()) SND.ok(); } else { if(api.sounds()) SND.bad(); } next(); };
+      opts.appendChild(card);
+    });
+    api.progress(Math.round(((8-rounds)/8)*100));
+  }
+  next();
+}
+
+/* -------------------- 5) MATH QUICK -------------------- */
+function MathQuick(root, api, settings){
+  const total = 8; let left = total, score=0;
+  root.innerHTML = `
+    <h3>Math Quick</h3>
+    <div class="center"><div id="mqQuestion" class="tile" style="width:280px;height:96px;font-size:28px"></div></div>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
+      <input id="mqAns" style="padding:8px;width:140px" inputmode="numeric" />
+      <button class="btn" id="mqGo">Submit</button>
+    </div>`;
+  const q = $('#mqQuestion', root), ans = $('#mqAns', root), go = $('#mqGo', root);
+  let current = null;
+  function nextQ(){
+    if(left<=0){ api.done(score, total, null, '➕', score*5); return; }
+    left--;
+    const d = settings.difficulty || 1;
+    const a = rand(1, 6 + d*4), b = rand(1, 6 + d*4);
+    const ops = d >= 3 ? ['+','-','*'] : ['+','-'];
+    const op = ops[rand(0, ops.length-1)];
+    const res = op==='+'? a+b : op==='-'? a-b : a*b;
+    current = res; q.textContent = `${a} ${op} ${b} = ?`; ans.value=''; ans.focus();
+    api.progress(Math.round(((total-left)/total)*100));
+  }
+  go.onclick = ()=>{ const v = parseFloat(ans.value); if(!isNaN(v) && v===current) { score++; if(api.sounds()) SND.ok(); } else { if(api.sounds()) SND.bad(); } nextQ(); };
+  ans.addEventListener('keydown', e=>{ if(e.key==='Enter'){ go.click(); }});
+  nextQ();
+}
+
+/* -------------------- 6) REACTION -------------------- */
+function ReactionGame(root, api, settings){
+  const tries = 6; let times = [], running=false, start=0;
+  root.innerHTML = `
+    <h3>Reaction</h3>
+    <p class="muted">Tap the circle when it turns green.</p>
+    <div class="center"><button class="circle" id="reactBtn">Start</button></div>
+    <div class="center small muted" style="margin-top:8px">Times: <span id="rTimes">-</span></div>`;
+  const btn = $('#reactBtn', root), timesEl = $('#rTimes', root);
+  function arm(){
+    btn.classList.remove('active'); btn.textContent='Wait'; running=true;
+    setTimeout(()=>{ if(window.__gamePaused){ setTimeout(arm, 500); return; } btn.classList.add('active'); btn.textContent='Tap!'; start = performance.now(); }, rand(800,2000));
+  }
+  btn.onclick = ()=>{
+    if(window.__gamePaused) return;
+    if(!running){ arm(); return; }
+    if(!btn.classList.contains('active')){ if(api.sounds()) SND.bad(); return; }
+    const rt = performance.now() - start; times.push(rt); timesEl.textContent = times.map(t=>Math.round(t)+'ms').join(', ');
+    if(api.sounds()) SND.ok();
+    running = false;
+    if(times.length >= tries){
+      const avg = times.reduce((a,b)=>a+b,0)/times.length;
+      api.done(Math.max(0, tries - Math.round(avg/300)), tries, avg, '⚡', 10);
+    }
+    else setTimeout(()=> arm(), 700);
+  };
+  arm();
+}
+
+/* -------------------- 7) SHAPES MATCH -------------------- */
+function ShapesGame(root, api, settings){
+  let rounds=8, score=0;
+  root.innerHTML = `
+    <h3>Shape Match</h3>
+    <div class="center"><div id="shapeTarget" class="tile" style="width:120px;height:120px;font-size:40px"></div></div>
+    <div class="tiles" id="shapeOpts" style="max-width:420px;margin-top:12px"></div>`;
+  const target = $('#shapeTarget', root), opts = $('#shapeOpts', root);
+  const shapes = ['◼','🔴','🔺','🔷'];
+  function next(){
+    if(rounds<=0){ api.done(score, 8, null, '🔷', score*3); return; }
+    rounds--;
+    const pick = rand(0, shapes.length-1);
+    target.textContent = shapes[pick];
+    opts.innerHTML = '';
+    const choices = shuffle([0,1,2,3]);
+    choices.forEach(i=>{
+      const t = document.createElement('div'); t.className='tile'; t.textContent = shapes[i];
+      t.onclick = ()=> { if(i===pick){ score++; if(api.sounds()) SND.ok(); } else { if(api.sounds()) SND.bad(); } next(); };
+      opts.appendChild(t);
+    });
+    api.progress(Math.round(((8-rounds)/8)*100));
+  }
+  next();
+}
+
+/* -------------------- 8) MOLE -------------------- */
+function MoleGame(root, api, settings){
+  root.innerHTML = `
+    <h3>Whack-a-Mole</h3>
+    <div class="grid" style="grid-template-columns:repeat(3,1fr);gap:8px;max-width:420px;margin:8px auto" id="mGrid"></div>
+    <p class="muted center">Tap the mole when it appears!</p>`;
+  const grid = $('#mGrid', root);
+  const cells=[];
+  for(let i=0;i<9;i++){ const b=document.createElement('div'); b.className='card center'; b.style.height='88px'; b.style.cursor='pointer'; b.dataset.idx=i; grid.appendChild(b); cells.push(b); }
+  let rounds=18, score=0, idx=-1, running=true;
+  function turn(){
+    if(rounds<=0 || !running){ api.done(score, 18, null, '🐹', score*2); return; }
+    rounds--;
+    if(idx>=0){ cells[idx].textContent=''; cells[idx].style.background=''; cells[idx].onclick = null; }
+    idx = rand(0,8);
+    cells[idx].textContent='🐹'; cells[idx].style.background='#fff7e6';
+    cells[idx].onclick = ()=> { score++; if(LS.get('settings').sounds) SND.ok(); cells[idx].onclick=null; cells[idx].textContent=''; };
+    api.progress(Math.round(((18-rounds)/18)*100));
+    setTimeout(turn, rand(500,950));
+  }
+  turn();
+}
+
+/* -------------------- 9) N-BACK (1-back) -------------------- */
+function NBackGame(root, api, settings){
+  const len = 16; const seq = Array.from({length:len}, ()=> rand(0,7));
+  let i=0, score=0, prev=null;
+  root.innerHTML = `
+    <h3>1-Back</h3>
+    <div class="center"><div class="tile" id="nShow" style="width:120px;height:120px;font-size:40px"></div></div>
+    <div style="text-align:center;margin-top:8px"><button class="btn" id="nMatch">MATCH</button></div>`;
+  const show = $('#nShow', root), btn = $('#nMatch', root);
+  btn.onclick = ()=> {
+    const isMatch = (i>0 && seq[i-1]===prev);
+    if(isMatch){ score++; if(LS.get('settings').sounds) SND.ok(); } else { if(LS.get('settings').sounds) SND.bad(); }
+  };
+  function step(){
+    if(i>=seq.length){ api.done(score, seq.length-1, null, '1️⃣', score); return; }
+    show.textContent = ico(seq[i]);
+    prev = (i>0)? seq[i-1] : null;
+    i++;
+    api.progress(Math.round(i/seq.length*100));
+    setTimeout(step, 900 - (settings.difficulty*80));
+  }
+  step();
+}
+
+/* -------------------- 10) ODD ONE OUT -------------------- */
+function OddOneGame(root, api, settings){
+  let rounds = 8, score=0;
+  root.innerHTML = `
+    <h3>Odd One Out</h3>
+    <div class="tiles" id="oddGrid"></div>`;
+  const grid = $('#oddGrid', root);
+  function next(){
+    if(rounds<=0){ api.done(score, 8, null, '🧐', score*3); return; }
+    rounds--;
+    grid.innerHTML='';
+    const base = rand(0,15), odd = rand(0,5);
+    const items = Array.from({length:6}, (_,i)=> i===odd ? base+1 : base);
+    shuffle(items).forEach((v)=>{
+      const t = document.createElement('div'); t.className='tile'; t.textContent = ico(v);
+      t.onclick = ()=> { if(v !== base){ score++; if(LS.get('settings').sounds) SND.ok(); } else { if(LS.get('settings').sounds) SND.bad(); } next(); };
+      grid.appendChild(t);
+    });
+    api.progress(Math.round(((8-rounds)/8)*100));
+  }
+  next();
+}
+
+/* -------------------- 11) PATTERN TILES -------------------- */
+function PatternTilesGame(root, api, settings){
+  const d = settings.difficulty||1;
+  const gridSize = d<=2 ? 3 : d===3 ? 4 : 5; // 3x3, 4x4, 5x5
+  const totalCells = gridSize*gridSize;
+  const patternCount = Math.min(totalCells-3, 3 + d*2);
+  const pattern = new Set();
+  while(pattern.size < patternCount) pattern.add(rand(0,totalCells-1));
+  let stage='show', guesses = new Set(), shownMs = 1400 + d*200;
+
+  root.innerHTML = `
+    <h3>Pattern Tiles</h3>
+    <p class="muted" id="ptInfo">Memorize the highlighted tiles</p>
+    <div id="ptGrid" class="grid" style="grid-template-columns:repeat(${gridSize},1fr);gap:8px;max-width:520px;margin:12px auto"></div>
+    <div class="center"><button class="btn" id="ptSubmit" disabled>Submit</button></div>
+  `;
+  const grid = $('#ptGrid', root), info=$('#ptInfo', root), submit=$('#ptSubmit', root);
+
+  for(let i=0;i<totalCells;i++){
+    const cell = document.createElement('div');
+    cell.className='tile'; cell.style.height='72px'; cell.dataset.idx=i;
+    if(pattern.has(i)) cell.classList.add('flipped');
+    grid.appendChild(cell);
+  }
+
+  api.progress(10);
+  setTimeout(()=>{
+    // hide pattern, switch to input
+    $$('.tile', grid).forEach(t=> t.classList.remove('flipped'));
+    stage='input'; info.textContent='Tap the tiles you saw. Tap again to unselect.';
+    submit.disabled=false;
+    api.progress(40);
+  }, shownMs);
+
+  grid.addEventListener('click', (e)=>{
+    if(window.__gamePaused) return;
+    const t = e.target.closest('.tile'); if(!t || stage!=='input') return;
+    const idx = parseInt(t.dataset.idx,10);
+    if(guesses.has(idx)){ guesses.delete(idx); t.classList.remove('flipped'); }
+    else { guesses.add(idx); t.classList.add('flipped'); if(api.sounds()) SND.ok(); }
+  });
+  submit.onclick = ()=>{
+    let correct=0;
+    pattern.forEach(i=>{ if(guesses.has(i)) correct++; });
+    api.done(correct, pattern.size, null, correct===pattern.size?'🧩':null, correct*4);
+  };
+}
+
+/* -------------------- 12) WORD MEMORY -------------------- */
+function WordMemoryGame(root, api, settings){
+  const pool = ['cat','car','tree','moon','cake','star','chair','train','duck','apple','house','robot','piano','beach','river','tiger','cloud','bread','phone','guitar','rocket','candy','puzzle','hat','ball','dragon','flower','book','mouse','pizza','drum'];
+  const d = settings.difficulty||1;
+  const showCount = 4 + d*2;
+  const seen = shuffle(pool).slice(0, showCount);
+  const distractors = shuffle(pool.filter(w=>!seen.includes(w))).slice(showCount);
+  const allChoices = shuffle(seen.concat(distractors)).slice(0, Math.min(12, showCount*2));
+  let stage='show', selected = new Set();
+
+  root.innerHTML = `
+    <h3>Word Memory</h3>
+    <p class="muted" id="wmInfo">Remember these words (${showCount})</p>
+    <div class="cards" id="wmShow"></div>
+    <div class="cards" id="wmChoices" style="display:none"></div>
+    <div class="center" style="margin-top:8px">
+      <button class="btn alt" id="wmStart" disabled>Start</button>
+      <button class="btn" id="wmSubmit" style="display:none">Submit</button>
+    </div>
+  `;
+  const show = $('#wmShow', root), choices = $('#wmChoices', root), info=$('#wmInfo', root), start=$('#wmStart', root), submit=$('#wmSubmit', root);
+
+  seen.forEach(w=>{
+    const c = document.createElement('div'); c.className='card'; c.style.textAlign='center'; c.innerHTML = `<div style="font-size:18px;font-weight:700;padding:10px">${w}</div>`;
+    show.appendChild(c);
+  });
+  api.progress(5);
+  // display for a while, then switch
+  setTimeout(()=>{ start.disabled=false; }, 800);
+  start.onclick = ()=> {
+    show.style.display='none'; choices.style.display='grid'; start.style.display='none'; submit.style.display='inline-block';
+    info.textContent = 'Select the words you saw';
+    allChoices.forEach(w=>{
+      const c = document.createElement('div'); c.className='card'; c.style.textAlign='center';
+      const b = document.createElement('button'); b.className='btn alt'; b.textContent = w;
+      b.onclick = ()=> {
+        if(window.__gamePaused) return;
+        if(selected.has(w)){ selected.delete(w); b.classList.remove('selected'); b.style.borderColor=''; }
+        else { selected.add(w); b.classList.add('selected'); b.style.borderColor='#34d399'; if(api.sounds()) SND.ok(); }
+      };
+      c.appendChild(b); choices.appendChild(c);
+    });
+    api.progress(60);
+  };
+
+  submit.onclick = ()=>{
+    let correct=0;
+    seen.forEach(w=> { if(selected.has(w)) correct++; });
+    api.done(correct, seen.length, null, correct===seen.length?'📝':null, correct*4);
+  };
+}
+
+/* -------------------- 13) TRAIL TAPPING -------------------- */
+function TrailTappingGame(root, api, settings){
+  const d = settings.difficulty||1;
+  const N = 6 + d*2; // numbers to tap
+  const size = Math.min(8, 5 + d*2);
+  const totalCells = size*size;
+  const gridNums = shuffle(Array.from({length:totalCells}, (_,i)=>i)).slice(0,N);
+  const numbers = shuffle(Array.from({length:N}, (_,i)=>i+1));
+  const placement = new Map(); // index -> number
+  gridNums.forEach((idx, i)=> placement.set(idx, numbers[i]));
+  let target = 1; let startTs=0;
+
+  root.innerHTML = `
+    <h3>Trail Tapping</h3>
+    <p class="muted">Tap numbers in order from <b>1</b> to <b>${N}</b></p>
+    <div id="ttGrid" class="grid" style="grid-template-columns:repeat(${size},1fr);gap:8px;max-width:560px;margin:12px auto"></div>
+  `;
+  const grid = $('#ttGrid', root);
+
+  for(let i=0;i<totalCells;i++){
+    const cell = document.createElement('div');
+    cell.className='tile'; cell.style.height='64px'; cell.dataset.idx=i;
+    const n = placement.get(i);
+    cell.textContent = n ? n : '';
+    cell.tabIndex = 0;
+    grid.appendChild(cell);
+  }
+  api.progress(0);
+  startTs = performance.now();
+
+  grid.addEventListener('click', e=>{
+    if(window.__gamePaused) return;
+    const t = e.target.closest('.tile'); if(!t) return;
+    const n = parseInt(t.textContent,10);
+    if(isNaN(n)) { if(api.sounds()) SND.bad(); return; }
+    if(n === target){
+      t.classList.add('flipped'); t.style.pointerEvents='none';
+      if(api.sounds()) SND.ok();
+      target++;
+      api.progress(Math.round(((target-1)/N)*100));
+      if(target > N){
+        const rt = performance.now() - startTs;
+        api.done(N, N, rt, '🗺', 10 + Math.max(0, (N*2 - Math.round(rt/400))));
+      }
+    } else {
+      if(api.sounds()) SND.bad();
+    }
+  });
+}
+
+/* -------------------- 14) QUICK SORT -------------------- */
+function QuickSortGame(root, api, settings){
+  const categories = {
+    'Animals': ['🐶','🐱','🐵','🦁','🐷','🐸'],
+    'Food': ['🍎','🍓','🍕','🍔','🍰','🍉'],
+    'Transport': ['🚗','🚲','✈','🛴','🚀','🚌'],
+  };
+  const keys = Object.keys(categories);
+  const d = settings.difficulty||1;
+  const pick = keys.slice(0, d>=4 ? 3 : 2); // 2 or 3 categories
+  const bucketMap = new Map();
+  let items = [];
+  pick.forEach(cat=>{
+    const drawn = shuffle(categories[cat]).slice(0, d>=3? 4:3);
+    drawn.forEach(x=> items.push({emoji:x, cat}));
+  });
+  items = shuffle(items);
+
+  root.innerHTML = `
+    <h3>Quick Sort</h3>
+    <p class="muted">Drag each emoji into the correct basket</p>
+    <div id="qsItems" class="tiles" style="max-width:660px"></div>
+    <div class="cards" id="qsBuckets" style="margin-top:8px"></div>
+    <div class="center" style="margin-top:8px"><button class="btn" id="qsSubmit">Submit</button></div>
+  `;
+  const itemsWrap = $('#qsItems', root), buckets = $('#qsBuckets', root);
+  items.forEach((it, idx)=>{
+    const d = document.createElement('div'); d.className='tile'; d.draggable=true; d.textContent = it.emoji; d.dataset.idx=idx;
+    d.addEventListener('dragstart', (e)=>{ e.dataTransfer.setData('text/plain', idx); });
+    itemsWrap.appendChild(d);
+  });
+  pick.forEach(cat=>{
+    const c = document.createElement('div'); c.className='card';
+    c.innerHTML = `<div style="font-weight:800">${cat}</div><div class="tiles" data-cat="${cat}" style="min-height:90px"></div>`;
+    const zone = c.querySelector('.tiles');
+    zone.addEventListener('dragover', e=> e.preventDefault());
+    zone.addEventListener('drop', e=>{
+      e.preventDefault();
+      const idx = parseInt(e.dataTransfer.getData('text/plain'),10);
+      const tile = itemsWrap.querySelector(`.tile[data-idx="${idx}"]`);
+      if(tile){ zone.appendChild(tile); bucketMap.set(idx, cat); if(LS.get('settings').sounds) SND.ok(); }
+    });
+    buckets.appendChild(c);
+  });
+
+  $('#qsSubmit', root).onclick = ()=> {
+    let correct=0;
+    items.forEach((it, idx)=>{ if(bucketMap.get(idx)===it.cat) correct++; });
+    api.done(correct, items.length, null, correct===items.length?'🧺':null, correct*3);
+  };
+}
+
+/* ======================================================================
+   Dashboard Charts and helpers
+   ====================================================================== */
+function drawCharts(){
+  const sessions = LS.get('progress',[]);
+  const latest = sessions.slice(0, 50).reverse();
+  const labels = latest.map(s=> new Date(s.at).toLocaleDateString());
+  const accuracies = latest.map(s=> s.max? Math.round((s.score/s.max)*100) : 0);
+  const rts = latest.map(s=> s.rt ? Math.round(s.rt) : null);
+
+  const ctxA = document.getElementById('chartAcc');
+  const ctxR = document.getElementById('chartRT');
+
+  if(ctxA){
+    new Chart(ctxA, {
+      type:'line',
+      data:{
+        labels,
+        datasets:[{
+          label:'Accuracy %',
+          data: accuracies,
+          tension:.25,
+          fill:false
+        }]
+      },
+      options:{
+        responsive:true,
+        scales:{ y:{ beginAtZero:true, max:100 } }
+      }
+    });
+  }
+  if(ctxR){
+    new Chart(ctxR, {
+      type:'line',
+      data:{
+        labels,
+        datasets:[{
+          label:'Reaction / Avg RT (ms)',
+          data: rts,
+          tension:.25,
+          spanGaps:true,
+          fill:false
+        }]
+      },
+      options:{
+        responsive:true,
+        scales:{ y:{ beginAtZero:true } }
+      }
+    });
+  }
+}
+
+function computeAvgRT(items){
+  const rts = items.map(i=>i.rt).filter(v=> typeof v==='number' && isFinite(v));
+  if(!rts.length) return '-';
+  return Math.round(rts.reduce((a,b)=>a+b,0)/rts.length) + ' ms';
+}
+
+/* ======================================================================
+   Startup
+   ====================================================================== */
+function applyPreferences(){
+  const s = LS.get('settings');
+  document.body.style.fontFamily = s.font || 'Poppins';
+  if(s.highContrast){
+    document.body.style.background = '#000';
+    document.body.style.color = '#fff';
+  } else {
+    document.body.style.background = '';
+    document.body.style.color = '';
+  }
+}
+applyPreferences();
+
+// Wire initial nav
+document.querySelectorAll('nav button[data-screen]').forEach(b=> b.addEventListener('click', ()=> render(b.dataset.screen)));
+
+// Populate and show
+render('home');
+
+// Prime audio on first click
+document.addEventListener('click', function prime(){ try{ ensureAudio(); }catch(e){} document.removeEventListener('click', prime); });
+
+// Keyboard shortcuts: M mute toggle, A toggle AI Coach, C toggle chat
+document.addEventListener('keydown', (e)=>{
+  if(e.key.toLowerCase()==='m'){ const s = LS.get('settings'); s.sounds = !s.sounds; LS.set('settings', s); toast('Sounds ' + (s.sounds? 'on':'off')); }
+  if(e.key.toLowerCase()==='a'){ const s = LS.get('settings'); s.aiCoach = !s.aiCoach; LS.set('settings', s); toast('AI Coach ' + (s.aiCoach? 'on':'off')); }
+  if(e.key.toLowerCase()==='c'){ toggleChat(); }
+});
+
+// Expose startGame globally (used by popular buttons)
+window.startGame = startGame;
+
+/* ======================================================================
+   Local Chatbot (simple rule-based) — integrated with UI and storage
+   ====================================================================== */
+const chatToggle = $('#chatToggle');
+const chatWindow = $('#chatWindow');
+const chatBody = $('#chatBody');
+const chatInput = $('#chatInput');
+const chatSend = $('#chatSend');
+const closeChat = $('#closeChat');
+const exportChatBtn = $('#exportChat');
+const clearChatBtn = $('#clearChat');
+
+function renderChatHistory(){
+  chatBody.innerHTML = '';
+  const history = LS.get('chat',[]);
+  history.forEach(m=> {
+    const row = document.createElement('div');
+    row.className = 'msg ' + (m.role==='user' ? 'user' : '');
+    const b = document.createElement('div');
+    b.className = 'bubble ' + (m.role==='bot' ? 'bot' : '');
+    const safe = (text)=> String(text).replace(/[&<>"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[s]));
+    b.innerHTML = `<div style="font-size:13px">${safe(m.text)}</div><div class="meta" style="margin-top:6px">${new Date(m.at).toLocaleTimeString()}</div>`;
+    row.appendChild(b);
+    chatBody.appendChild(row);
+  });
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+function persistChat(role, text){
+  const obj = { role, text, at: nowISO() };
+  const arr = LS.get('chat',[]);
+  arr.push(obj);
+  LS.set('chat', arr);
+  renderChatHistory();
+}
+
+function toggleChat(force){
+  const isOpen = chatWindow.style.display !== 'none' && chatWindow.style.display !== '';
+  const show = typeof force === 'boolean' ? force : !isOpen;
+  chatWindow.style.display = show ? 'flex' : 'none';
+  chatWindow.setAttribute('aria-hidden', show ? 'false' : 'true');
+  if(show) renderChatHistory();
+}
+
+chatToggle.addEventListener('click', ()=> toggleChat());
+closeChat.addEventListener('click', ()=> toggleChat(false));
+exportChatBtn.addEventListener('click', ()=> {
+  const data = LS.get('chat',[]);
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'coach-chat.json'; a.click();
+  URL.revokeObjectURL(url);
+  toast('Chat exported');
+});
+clearChatBtn.addEventListener('click', ()=> {
+  if(!confirm('Clear chat history?')) return;
+  LS.set('chat', []);
+  renderChatHistory();
+  toast('Cleared chat');
+});
+
+chatSend.addEventListener('click', ()=> {
+  const v = chatInput.value && chatInput.value.trim();
+  if(!v) return;
+  persistChat('user', v);
+  chatInput.value = '';
+  // simulate thinking and reply
+  setTimeout(()=> {
+    const reply = localBotResponse(v);
+    persistChat('bot', reply);
+    if(LS.get('settings').aiCoach) speak(reply);
+  }, 250 + Math.random()*600);
+});
+chatInput.addEventListener('keydown', (e)=> { if(e.key==='Enter'){ e.preventDefault(); chatSend.click(); } });
+
+function localBotResponse(text){
+  const t = (text||'').toLowerCase();
+  // direct intents
+  if(t.includes('help') || t.includes('how') || t.includes('what can')){
+    return 'I can give tips, analyze recent progress, suggest games, export data, and explain settings. Try: "analyze progress", "tip for attention", or "what to play".';
+  }
+  if(t.includes('tip')){
+    const tips = [
+      'Short frequent sessions help memory.',
+      'Celebrate effort more than scores.',
+      'Practice different skills: mix Memory and Reaction.',
+      'Use sounds for quick feedback.'
+    ];
+    return tips[rand(0,tips.length-1)];
+  }
+  if(t.includes('analyze') || t.includes('progress')){
+    const res = analyzeProgressForAI();
+    return `Coach analysis: ${res.msg} Suggested difficulty: ${res.rec.difficulty}. Overall: ${res.rec.overall || 'N/A'}%`;
+  }
+  if(t.includes('what to play') || t.includes('recommend')){
+    const sessions = LS.get('progress',[]);
+    if(!sessions.length) return 'Try Memory Pairs for a short, friendly start. Or Attention Tap for speed.';
+    const res = analyzeProgressForAI();
+    return `Based on your progress: ${res.msg}`;
+  }
+  if(t.includes('export')){
+    exportJSON();
+    return 'Exported data to JSON.';
+  }
+  if(t.includes('settings')){
+    const s = LS.get('settings');
+    return `Settings: name ${s.name}, age ${s.age}, difficulty ${s.difficulty}, session length ${s.sessionLength}min.`;
+  }
+  if(t.includes('hi')||t.includes('hello')||t.includes('hey')) return 'Hello! I am your local Coach. Ask me to analyze progress or suggest a short game.';
+  // keyword matches
+  if(t.match(/memory|pairs/)) return 'Memory Pairs is great for visual memory. Try difficulty 2 for 4 pairs.';
+  if(t.match(/reaction|speed/)) return 'Try Reaction or Attention Tap games to improve speed. Keep sessions short.';
+  // fallback
+  return "I didn't understand that exactly. Try 'analyze progress' or 'give me a tip'.";
+}
+
+/* ======================================================================
+   End of file
+   ====================================================================== */
+</script>
+</body>
+</html>
